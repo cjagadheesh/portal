@@ -1,0 +1,60 @@
+[project]
+name = "portal-dev"
+version = "0.1.0"
+description = "Ephemeral AWS Spot dev boxes that cannot run up a surprise bill."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "cjagadheesh" }]
+keywords = ["aws", "ec2", "spot", "dev-environment", "ssm", "cost-control"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Operating System :: POSIX",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development",
+    "Typing :: Typed",
+]
+dependencies = [
+    "typer>=0.12",
+    "rich>=13",
+    "boto3>=1.34",
+    "pydantic>=2",
+    "pyyaml>=6.0.3",
+]
+
+[project.scripts]
+portal = "portal.cli:run"
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "moto[ec2,ssm,sts]>=5",
+    "ruff>=0.5",
+    "mypy>=1.10",
+    "types-pyyaml>=6.0.12.20260906",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["portal"]
+
+# The on-box agent lives in agent/ (stdlib only, runs on the box). Bundling it inside the
+# wheel lets an installed `portal` ship it to new boxes; see portal/bootstrap.py.
+[tool.hatch.build.targets.wheel.force-include]
+"agent" = "portal/agent_src"
+# The Terraform for `portal init` ships with the CLI, so a pip-installed portal can create the
+# control plane without a git checkout (see portal/terraform.py).
+"infra" = "portal/infra_src"
+
+[tool.hatch.build.targets.sdist]
+# The launch video is for the GitHub page, not the package; keeps the sdist small.
+exclude = ["docs/media"]
