@@ -1,0 +1,73 @@
+# Publishes to PyPI when you push a version tag (git tag v0.1.0 && git push --tags).
+#
+# One-time setup, no stored tokens: on pypi.org add a "trusted publisher" for this repository
+# (workflow: release.yml, environment: pypi). PyPI then accepts this workflow's OIDC identity.
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - name: CHANGELOG.md must have a section for this version
+        run: grep -q "^## \\[${GITHUB_REF_NAME#v}\\]" CHANGELOG.md
+      - name: The tag must match the version in pyproject.toml
+        run: |
+          version=$(uv run python -c "import tomllib;print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])")
+          test "v$version" = "${GITHUB_REF_NAME}" || { echo "tag ${GITHUB_REF_NAME} != v$version"; exit 1; }
+      - run: uv sync
+      - run: uv run ruff check && uv run mypy --strict portal agent infra/reaper/handler.py
+      - run: uv run pytest -q
+      - run: uv build
+      - name: The wheel must carry the agent, the Terraform and the licence
+        run: |
+          python3 -m zipfile -l dist/*.whl | tee /tmp/wheel.txt
+          grep -q "portal/agent_src/idle.py" /tmp/wheel.txt
+          grep -q "portal/infra_src/control-plane/main.tf\|portal/infra_src/control-plane/versions.tf" /tmp/wheel.txt
+          grep -q "portal/infra_src/reaper/handler.py" /tmp/wheel.txt
+          grep -qi "licen[sc]e" /tmp/wheel.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  publish:
+    needs: build
+    runs-on: ubuntu-24.04
+    environment: pypi
+    permissions:
+      id-token: write # trusted publishing
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1
+
+  github-release:
+    needs: publish
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write # create the release
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - name: Release notes come from CHANGELOG.md
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          awk -v v="$version" '$0 ~ "^## \\["v"\\]" {on=1; next} /^## \[/ {on=0} on' CHANGELOG.md > notes.md
+          test -s notes.md || { echo "no CHANGELOG.md section for $version"; exit 1; }
+      - run: gh release create "$GITHUB_REF_NAME" dist/* --title "$GITHUB_REF_NAME" --notes-file notes.md
+        env:
+          GH_TOKEN: ${{ github.token }}

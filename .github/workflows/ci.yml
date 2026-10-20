@@ -1,0 +1,48 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  python:
+    name: python ${{ matrix.python }}
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: sudo apt-get update && sudo apt-get install -y rsync # real-rsync tests; skipped if absent
+      - run: uv sync --python ${{ matrix.python }}
+      - run: uv run ruff check
+      - run: uv run ruff format --check .
+      - run: uv run mypy --strict portal agent infra/reaper/handler.py
+      # No AWS credentials exist in this job on purpose: a test that needs them is broken.
+      - run: uv run pytest -q
+
+  terraform:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+      - uses: terraform-linters/setup-tflint@v4
+      - run: terraform fmt -check -recursive infra
+      - run: terraform -chdir=infra/control-plane init -backend=false
+      - run: terraform -chdir=infra/control-plane validate
+      - run: tflint --chdir=infra/control-plane --recursive
+
+  packer:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-packer@v3
+      - run: packer init packer/
+      - run: packer fmt -check packer/
+      - run: packer validate -syntax-only packer/
