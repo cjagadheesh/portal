@@ -1,0 +1,41 @@
+# Rebuilds the portal AMI every week so security updates are baked in, and on demand.
+#
+# Needs repository *variables* (Settings > Secrets and variables > Actions > Variables).
+# They are not secrets, but they are deliberately not committed either:
+#   AWS_PACKER_ROLE_ARN   IAM role GitHub may assume via OIDC (no long-lived keys anywhere)
+#   AWS_REGION            region of your control plane
+#   PACKER_SUBNET_ID, PACKER_SECURITY_GROUP_ID, PACKER_INSTANCE_PROFILE   from `portal init`
+#   PACKER_INSTANCE_TYPE  a small instance type of the architecture you build
+#   PACKER_ARCH           arm64 or amd64
+name: ami
+
+on:
+  schedule:
+    - cron: "0 3 * * 1" # Mondays 03:00 UTC
+  workflow_dispatch:
+
+permissions:
+  id-token: write # for OIDC
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - name: provision.sh is in sync with portal/bootstrap.py
+        run: uv run python -m portal.bootstrap | diff - packer/provision.sh
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_PACKER_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+      - uses: hashicorp/setup-packer@v3
+      - name: Install the Session Manager plugin (Packer connects through SSM, never SSH)
+        run: |
+          curl -fsSL "https://s3.amazonaws.com/session-manager-downloads/plugin/latest/ubuntu_64bit/session-manager-plugin.deb" -o /tmp/ssm-plugin.deb
+          sudo dpkg -i /tmp/ssm-plugin.deb
+      - run: packer init packer/
+      - run: packer validate -var "region=${{ vars.AWS_REGION }}" -var "arch=${{ vars.PACKER_ARCH }}" -var "instance_type=${{ vars.PACKER_INSTANCE_TYPE }}" -var "subnet_id=${{ vars.PACKER_SUBNET_ID }}" -var "security_group_id=${{ vars.PACKER_SECURITY_GROUP_ID }}" -var "instance_profile=${{ vars.PACKER_INSTANCE_PROFILE }}" packer/
+      - run: packer build -var "region=${{ vars.AWS_REGION }}" -var "arch=${{ vars.PACKER_ARCH }}" -var "instance_type=${{ vars.PACKER_INSTANCE_TYPE }}" -var "subnet_id=${{ vars.PACKER_SUBNET_ID }}" -var "security_group_id=${{ vars.PACKER_SECURITY_GROUP_ID }}" -var "instance_profile=${{ vars.PACKER_INSTANCE_PROFILE }}" -var "owner=github-actions" packer/
