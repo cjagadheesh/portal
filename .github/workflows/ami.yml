@@ -27,7 +27,7 @@ jobs:
       - uses: astral-sh/setup-uv@v5
       - name: provision.sh is in sync with portal/bootstrap.py
         run: uv run python -m portal.bootstrap | diff - packer/provision.sh
-      - uses: aws-actions/configure-aws-credentials@v4
+      - uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: ${{ vars.AWS_PACKER_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}
