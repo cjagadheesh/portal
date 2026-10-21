@@ -31,7 +31,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      - uses: hashicorp/setup-terraform@v3
+      - uses: hashicorp/setup-terraform@v4
       - uses: terraform-linters/setup-tflint@v4
       - run: terraform fmt -check -recursive infra
       - run: terraform -chdir=infra/control-plane init -backend=false
