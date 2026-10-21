@@ -1,0 +1,22 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "DoctorReadOnlyChecks",
+      "Effect": "Allow",
+      "Action": [
+        "iam:ListAttachedRolePolicies",
+        "iam:ListRolePolicies",
+        "lambda:GetFunctionConfiguration",
+        "events:DescribeRule",
+        "logs:DescribeLogGroups",
+        "logs:DescribeLogStreams",
+        "budgets:ViewBudget",
+        "ce:ListCostAllocationTags",
+        "servicequotas:GetServiceQuota",
+        "ec2:DescribeInstanceTypeOfferings"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
