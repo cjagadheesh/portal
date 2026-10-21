@@ -32,7 +32,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: hashicorp/setup-terraform@v3
-      - uses: terraform-linters/setup-tflint@v4
+      - uses: terraform-linters/setup-tflint@v6
       - run: terraform fmt -check -recursive infra
       - run: terraform -chdir=infra/control-plane init -backend=false
       - run: terraform -chdir=infra/control-plane validate
