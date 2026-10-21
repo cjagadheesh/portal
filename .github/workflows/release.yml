@@ -34,7 +34,7 @@ jobs:
           grep -q "portal/infra_src/control-plane/main.tf\|portal/infra_src/control-plane/versions.tf" /tmp/wheel.txt
           grep -q "portal/infra_src/reaper/handler.py" /tmp/wheel.txt
           grep -qi "licen[sc]e" /tmp/wheel.txt
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: dist
           path: dist/
