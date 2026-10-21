@@ -1,7 +1,6 @@
 # portal
 
-[![ci](https://github.com/OWNER/portal/actions/workflows/ci.yml/badge.svg)](https://github.com/OWNER/portal/actions/workflows/ci.yml)
-<!-- Replace OWNER with your GitHub user or org once the repo is public. -->
+[![ci](https://github.com/cjagadheesh/portal/actions/workflows/ci.yml/badge.svg)](https://github.com/cjagadheesh/portal/actions/workflows/ci.yml)
 
 > Ephemeral cloud dev boxes on AWS Spot that can't run up a surprise bill.
 
