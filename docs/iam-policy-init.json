@@ -1,0 +1,65 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "ControlPlaneIam",
+      "Effect": "Allow",
+      "Action": [
+        "iam:CreateRole", "iam:DeleteRole", "iam:GetRole", "iam:TagRole", "iam:UntagRole",
+        "iam:ListRolePolicies", "iam:ListAttachedRolePolicies", "iam:ListInstanceProfilesForRole",
+        "iam:PutRolePolicy", "iam:GetRolePolicy", "iam:DeleteRolePolicy",
+        "iam:AttachRolePolicy", "iam:DetachRolePolicy",
+        "iam:CreateInstanceProfile", "iam:DeleteInstanceProfile", "iam:GetInstanceProfile",
+        "iam:TagInstanceProfile", "iam:AddRoleToInstanceProfile", "iam:RemoveRoleFromInstanceProfile",
+        "iam:PassRole"
+      ],
+      "Resource": [
+        "arn:aws:iam::<ACCOUNT_ID>:role/portal-*",
+        "arn:aws:iam::<ACCOUNT_ID>:instance-profile/portal-*"
+      ]
+    },
+    {
+      "Sid": "ControlPlaneNetwork",
+      "Effect": "Allow",
+      "Action": [
+        "ec2:CreateSecurityGroup", "ec2:DeleteSecurityGroup",
+        "ec2:AuthorizeSecurityGroupEgress", "ec2:RevokeSecurityGroupEgress",
+        "ec2:CreateTags", "ec2:DeleteTags",
+        "ec2:DescribeVpcs", "ec2:DescribeSecurityGroups", "ec2:DescribeSecurityGroupRules",
+        "ec2:DescribeNetworkInterfaces", "ec2:DescribeTags"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "BudgetAlerts",
+      "Effect": "Allow",
+      "Action": [
+        "sns:CreateTopic", "sns:DeleteTopic", "sns:GetTopicAttributes", "sns:SetTopicAttributes",
+        "sns:Subscribe", "sns:Unsubscribe", "sns:GetSubscriptionAttributes",
+        "sns:TagResource", "sns:UntagResource", "sns:ListTagsForResource",
+        "budgets:ViewBudget", "budgets:ModifyBudget",
+        "budgets:TagResource", "budgets:UntagResource", "budgets:ListTagsForResource"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "Reaper",
+      "Effect": "Allow",
+      "Action": [
+        "lambda:CreateFunction", "lambda:DeleteFunction", "lambda:GetFunction",
+        "lambda:GetFunctionConfiguration", "lambda:GetFunctionCodeSigningConfig",
+        "lambda:UpdateFunctionCode", "lambda:UpdateFunctionConfiguration",
+        "lambda:AddPermission", "lambda:RemovePermission", "lambda:GetPolicy",
+        "lambda:ListVersionsByFunction", "lambda:TagResource", "lambda:UntagResource",
+        "lambda:ListTags",
+        "events:PutRule", "events:DeleteRule", "events:DescribeRule",
+        "events:PutTargets", "events:RemoveTargets", "events:ListTargetsByRule",
+        "events:TagResource", "events:UntagResource", "events:ListTagsForResource",
+        "logs:CreateLogGroup", "logs:DeleteLogGroup", "logs:DescribeLogGroups",
+        "logs:PutRetentionPolicy", "logs:DeleteRetentionPolicy",
+        "logs:TagResource", "logs:UntagResource", "logs:ListTagsForResource", "logs:ListTagsLogGroup"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
