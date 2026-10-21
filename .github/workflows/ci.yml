@@ -17,7 +17,7 @@ jobs:
       matrix:
         python: ["3.11", "3.12", "3.13"]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v5
       - run: sudo apt-get update && sudo apt-get install -y rsync # real-rsync tests; skipped if absent
       - run: uv sync --python ${{ matrix.python }}
@@ -30,7 +30,7 @@ jobs:
   terraform:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: hashicorp/setup-terraform@v3
       - uses: terraform-linters/setup-tflint@v4
       - run: terraform fmt -check -recursive infra
@@ -41,7 +41,7 @@ jobs:
   packer:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: hashicorp/setup-packer@v3
       - run: packer init packer/
       - run: packer fmt -check packer/
