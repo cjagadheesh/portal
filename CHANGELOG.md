@@ -23,6 +23,7 @@ Run `portal doctor` and the drills in `docs/` on your first deployment.
 - Packer image build over SSM; weekly rebuild workflow.
 
 ### Reliability and safety
+- `portal sync --watch` reports a clear error instead of a traceback if rsync disappears mid-session.
 - Every creating call carries an idempotency token; all clients retry with backoff and have
   timeouts; cleanup is best-effort and never turns a successful launch into an error.
 - Per-box file lock, a running-box limit, input validation, private state files, and a crash

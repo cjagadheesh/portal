@@ -65,9 +65,12 @@ def listing_args(rsync: str, src: Path) -> list[str]:
 
 def snapshot(rsync: str, src: Path) -> str:
     """A fingerprint of the tree (names, sizes, mtimes). It changes when a push is needed."""
-    result = subprocess.run(  # noqa: S603 - fixed argv, no shell
-        listing_args(rsync, src), capture_output=True, text=True, check=False
-    )
+    try:
+        result = subprocess.run(  # noqa: S603 - fixed argv, no shell
+            listing_args(rsync, src), capture_output=True, text=True, check=False
+        )
+    except OSError as e:  # rsync vanished or is not executable since check_rsync()
+        raise PortalError(f"rsync could not read {src}: {e}") from e
     if result.returncode != 0:
         raise PortalError(f"rsync could not read {src}: {result.stderr.strip()}")
     return result.stdout
