@@ -1,5 +1,6 @@
 """Code that runs ON the box every minute, or only in an emergency, exercised for real."""
 
+import shutil
 from pathlib import Path
 from typing import Any
 
@@ -178,13 +179,14 @@ def test_online_means_the_ping_status_says_so() -> None:
     assert not ssm_calls.is_online(ssm_with(None), "i-1")  # not registered yet
 
 
-def test_missing_rsync_and_unreadable_sources_are_clear_errors(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
+def test_missing_rsync_is_a_clear_error(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(sync_calls.shutil, "which", lambda tool: None)
     with pytest.raises(PortalError, match="needs rsync"):
         sync_calls.check_rsync()
-    monkeypatch.undo()
+
+
+@pytest.mark.skipif(shutil.which("rsync") is None, reason="needs a real rsync on PATH")
+def test_unreadable_sources_are_a_clear_error(tmp_path: Path) -> None:
     with pytest.raises(PortalError, match="could not read"):
         sync_calls.snapshot("rsync", tmp_path / "does-not-exist")
 
